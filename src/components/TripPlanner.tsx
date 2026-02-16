@@ -768,7 +768,7 @@ export default function TripPlanner({
             {/* Footer */}
             <div className="mt-4 pt-3 border-t border-edge/30 text-center">
               <p className="text-[10px] md:text-[11px] text-dim-fg">
-                v1.2.0 · Powered by OpenStreetMap, OSRM &amp; supercharge.info
+                v{process.env.NEXT_PUBLIC_APP_VERSION} · Powered by OpenStreetMap, OSRM &amp; supercharge.info
               </p>
             </div>
           </div>
@@ -789,7 +789,7 @@ export default function TripPlanner({
           <img src={theme === "dark" ? "/logo-dark.svg" : "/logo-light.svg"} alt="WattsWay" className="w-7 h-7 rounded-lg" />
           <div className="flex items-baseline gap-1.5">
             <span className="wattway-logo text-foreground !text-[13px]">WattsWay</span>
-            <span className="text-[8px] text-dim-fg font-medium tracking-wide uppercase">v1.1.7</span>
+            <span className="text-[8px] text-dim-fg font-medium tracking-wide uppercase">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
           </div>
         </a>
         <div className="flex items-center gap-1.5">
@@ -832,7 +832,7 @@ export default function TripPlanner({
           <img src={theme === "dark" ? "/logo-dark.svg" : "/logo-light.svg"} alt="WattsWay" className="w-7 h-7 rounded-lg" />
           <div className="flex items-baseline gap-2">
             <span className="wattway-logo text-foreground">WATTSWAY</span>
-            <span className="text-[9px] text-dim-fg font-medium tracking-wide uppercase">v1.1.7</span>
+            <span className="text-[9px] text-dim-fg font-medium tracking-wide uppercase">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
           </div>
         </a>
 
@@ -1071,7 +1071,7 @@ export default function TripPlanner({
 
                 <div className="pt-2 border-t border-edge/30 text-center">
                   <p className="text-[10px] md:text-[11px] text-dim-fg">
-                    v1.2.0 · Built with Claude Code &amp; Grok · Powered by OpenStreetMap, OSRM &amp; supercharge.info
+                    v{process.env.NEXT_PUBLIC_APP_VERSION} · Built with Claude Code &amp; Grok · Powered by OpenStreetMap, OSRM &amp; supercharge.info
                   </p>
                 </div>
               </div>

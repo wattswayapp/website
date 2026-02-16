@@ -1026,15 +1026,15 @@ export default function TripPlanner({
                     <p className="text-xs md:text-sm text-secondary-fg leading-relaxed">
                       WattsWay will be fully open source. We believe the best EV trip planner should be built by the community that uses it. Whether you&apos;re a developer, a designer, or just someone with a great idea, your contributions can make WattsWay better for every EV driver out there.
                     </p>
-                    {/* <a
-                      href="https://github.com/watch-wattsway"
+                    <a
+                      href="https://github.com/wattswayapp/website"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 mt-3 text-xs md:text-sm font-medium text-[#e31937] hover:text-[#ff2d4b] transition-colors"
                     >
                       <GitBranch size={12} />
                       Contribute on GitHub
-                    </a> */}
+                    </a>
                   </div>
 
                   <div className="bg-elevated/60 rounded-xl p-3 md:p-4">

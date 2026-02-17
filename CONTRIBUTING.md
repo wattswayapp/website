@@ -55,6 +55,17 @@ Thanks for your interest in contributing! This guide will help you get started.
 - Link any related issues
 - Keep PRs focused - one feature or fix per PR
 
+### Versioning & PR Labels
+
+When your PR is merged to `main`, the app version is **automatically bumped** by the `auto-version.yml` workflow:
+
+- **Default:** patch bump (e.g. 1.2.0 → 1.2.1)
+- Add the **`version:minor`** label to your PR for a minor bump (e.g. 1.2.1 → 1.3.0)
+- Add the **`version:major`** label for a major bump (e.g. 1.3.0 → 2.0.0)
+- No label needed for a regular patch bump — it happens automatically
+
+The workflow commits with a `chore(version):` prefix and pushes a git tag. You do not need to manually edit `package.json` for version bumps.
+
 ## Code Style
 
 - TypeScript is used throughout the project

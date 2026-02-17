@@ -294,7 +294,7 @@ export default function AskAI({ trip, selectedModel, startCharge }: AskAIProps) 
       </div>
 
       {/* Messages area */}
-      <div className="max-h-[180px] md:max-h-[240px] overflow-y-auto scrollbar-none px-3 py-2 space-y-2">
+      <div className="max-h-[234px] md:max-h-[312px] overflow-y-auto scrollbar-none px-3 py-2 space-y-2">
         {messages.length === 0 && !error && (
           <div className="space-y-2">
             <p className="text-[10px] text-muted-fg text-center mb-2">

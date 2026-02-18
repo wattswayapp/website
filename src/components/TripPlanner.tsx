@@ -46,6 +46,7 @@ import {
   Heart,
   GitBranch,
   Globe,
+  MapPin,
 } from "lucide-react";
 import { SavedTrip } from "@/lib/types";
 import { saveTrip as saveTripToStorage } from "@/lib/saved-trips";
@@ -115,6 +116,7 @@ export default function TripPlanner({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [focusPoint, setFocusPoint] = useState<{ center: LatLng; zoom: number } | null>(null);
   const [mobileSheetExpanded, setMobileSheetExpanded] = useState(true);
+  const [mobileSheetHidden, setMobileSheetHidden] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
   const [trafficCongestion, setTrafficCongestion] = useState<TrafficCongestion | null>(null);
   const [trafficLoading, setTrafficLoading] = useState(false);
@@ -201,6 +203,7 @@ export default function TripPlanner({
     setTrafficCongestion(null);
     setWizardStep("results");
     setMobileSheetExpanded(true);
+    setMobileSheetHidden(false);
 
     // Re-fetch route polyline in background (stripped from localStorage to save space)
     const { originCoords: oc, destinationCoords: dc } = saved.trip;
@@ -400,6 +403,7 @@ export default function TripPlanner({
 
       setTrip(tripResult);
       setMobileSheetExpanded(true);
+      setMobileSheetHidden(false);
       setWizardStep("results");
 
       // Non-blocking traffic fetch
@@ -801,7 +805,7 @@ export default function TripPlanner({
             <Info size={15} className="text-muted-fg" />
           </button>
           <a
-            href="https://x.com/wattwayai"
+            href="https://x.com/WattsWayApp"
             target="_blank"
             rel="noopener noreferrer"
             className="w-9 h-9 rounded-xl bg-elevated border border-edge/50 flex items-center justify-center"
@@ -846,7 +850,7 @@ export default function TripPlanner({
             <span className="text-[13px] font-medium text-muted-fg">About us</span>
           </button>
           <a
-            href="https://x.com/wattwayai"
+            href="https://x.com/WattsWayApp"
             target="_blank"
             rel="noopener noreferrer"
             className="w-9 h-9 rounded-xl bg-elevated border border-edge/50 flex items-center justify-center hover:bg-accent-surface transition-colors"
@@ -1050,7 +1054,7 @@ export default function TripPlanner({
 
                 <div className="flex gap-2">
                   <a
-                    href="https://x.com/wattwayai"
+                    href="https://x.com/WattsWayApp"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 flex items-center justify-center gap-2 py-2.5 md:py-3 bg-elevated/80 border border-edge/50 rounded-xl text-xs md:text-sm font-medium text-secondary-fg hover:bg-accent-surface/80 transition-all"
@@ -1078,53 +1082,63 @@ export default function TripPlanner({
             </div>
           </div>
         ) : isMobileResults ? (
-          /* Mobile results: bottom-anchored sheet — tap handle to collapse/expand */
-          <div className="absolute inset-x-0 bottom-0 z-[500] flex flex-col">
-            <div className={`bg-surface/60 backdrop-blur-xl border-t border-edge/50 rounded-t-2xl shadow-2xl flex flex-col transition-[max-height] duration-300 ease-in-out ${mobileSheetExpanded ? "max-h-[70dvh]" : "max-h-[64px]"}`}>
-              {/* Drag handle — tap or swipe to toggle */}
+          mobileSheetHidden ? (
+            /* Hidden state: small pill button centered at the bottom */
+            <div className="absolute inset-x-0 bottom-6 z-[500] flex justify-center">
               <button
-                onClick={() => setMobileSheetExpanded((v) => !v)}
-                onTouchStart={(e) => {
-                  touchStartY.current = e.touches[0].clientY;
+                onClick={() => {
+                  setMobileSheetHidden(false);
+                  setMobileSheetExpanded(true);
                 }}
-                onTouchEnd={(e) => {
-                  if (touchStartY.current === null) return;
-                  const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-                  if (Math.abs(deltaY) > 30) {
-                    setMobileSheetExpanded(deltaY < 0);
-                  }
-                  touchStartY.current = null;
-                }}
-                className="flex items-center justify-center gap-2 pt-3 pb-2 shrink-0 w-full"
+                className="flex items-center gap-2 px-5 py-3 bg-surface/80 backdrop-blur-xl border border-edge/50 rounded-full shadow-2xl active:scale-95 transition-transform"
               >
-                {mobileSheetExpanded ? (
-                  <ChevronDown size={16} className="text-muted-fg" />
-                ) : (
-                  <ChevronUp size={16} className="text-muted-fg" />
-                )}
-                <span className="text-xs font-medium text-muted-fg">
-                  {mobileSheetExpanded ? "Swipe down to collapse" : "Swipe up to expand"}
-                </span>
-                {mobileSheetExpanded ? (
-                  <ChevronDown size={16} className="text-muted-fg" />
-                ) : (
-                  <ChevronUp size={16} className="text-muted-fg" />
-                )}
+                <MapPin size={16} className="text-[#e31937]" />
+                <span className="text-sm font-semibold text-foreground">Show trip</span>
               </button>
-              {!mobileSheetExpanded && trip && (
-                <div className="flex items-center justify-center gap-1.5 px-4 pb-1.5">
-                  <span className="text-xs font-medium text-foreground truncate">{trip.origin}</span>
-                  <ChevronRight size={10} className="text-dim-fg shrink-0" />
-                  <span className="text-xs font-medium text-foreground truncate">{trip.destination}</span>
-                </div>
-              )}
-              {mobileSheetExpanded && (
-                <div className="overflow-y-auto overscroll-contain px-4 pb-safe scrollbar-thin">
-                  {renderStepContent()}
-                </div>
-              )}
             </div>
-          </div>
+          ) : (
+            /* Mobile results: bottom-anchored sheet — tap handle to collapse/expand */
+            <div className="absolute inset-x-0 bottom-0 z-[500] flex flex-col">
+              <div className={`bg-surface/60 backdrop-blur-xl border-t border-edge/50 rounded-t-2xl shadow-2xl flex flex-col transition-[max-height] duration-300 ease-in-out ${mobileSheetExpanded ? "max-h-[70dvh]" : "max-h-[64px]"}`}>
+                {/* Drag handle — swipe to expand/collapse, tap to hide */}
+                <button
+                  onClick={() => setMobileSheetHidden(true)}
+                  onTouchStart={(e) => {
+                    touchStartY.current = e.touches[0].clientY;
+                  }}
+                  onTouchEnd={(e) => {
+                    if (touchStartY.current === null) return;
+                    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+                    touchStartY.current = null;
+                    if (Math.abs(deltaY) > 30) {
+                      if (deltaY < 0) {
+                        // Swipe up → expand
+                        setMobileSheetExpanded(true);
+                      } else {
+                        // Swipe down → hide
+                        setMobileSheetHidden(true);
+                      }
+                    }
+                  }}
+                  className="flex items-center justify-center pt-3 pb-2 shrink-0 w-full"
+                >
+                  <div className="w-8 h-1 rounded-full bg-muted-fg/40" />
+                </button>
+                {!mobileSheetExpanded && trip && (
+                  <div className="flex items-center justify-center gap-1.5 px-4 pb-1.5">
+                    <span className="text-xs font-medium text-foreground truncate">{trip.origin}</span>
+                    <ChevronRight size={10} className="text-dim-fg shrink-0" />
+                    <span className="text-xs font-medium text-foreground truncate">{trip.destination}</span>
+                  </div>
+                )}
+                {mobileSheetExpanded && (
+                  <div className="overflow-y-auto overscroll-contain px-4 pb-safe scrollbar-thin">
+                    {renderStepContent()}
+                  </div>
+                )}
+              </div>
+            </div>
+          )
         ) : (
           /* Desktop + Mobile steps 1-3: floating panel at top-left */
           <div

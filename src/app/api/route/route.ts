@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     // OSRM public routing API
     const url = `https://router.project-osrm.org/route/v1/driving/${originLng},${originLat};${destLng},${destLat}?overview=full&geometries=geojson&steps=true`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
 
     if (!response.ok) {
       throw new Error(`Routing failed: ${response.status}`);

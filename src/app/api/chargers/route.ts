@@ -13,7 +13,8 @@ async function getAllSuperchargers(): Promise<any[]> {
   }
   try {
     const res = await fetch(
-      "https://supercharge.info/service/supercharge/allSites"
+      "https://supercharge.info/service/supercharge/allSites",
+      { signal: AbortSignal.timeout(10000) }
     );
     if (!res.ok) throw new Error(`Supercharge.info API: ${res.status}`);
     superchargerCache = await res.json();
@@ -126,6 +127,10 @@ function parseOverpassElement(el: any, seenLocations: Set<string>): ChargerStati
     network: operator || "Unknown",
   };
 }
+
+// In-memory cache for Overpass tile results (refreshed every 10 min)
+const overpassCache = new Map<string, { data: any[]; time: number }>();
+const OVERPASS_CACHE_TTL = 10 * 60 * 1000;
 
 const OVERPASS_SERVERS = [
   "https://overpass.kumi.systems/api/interpreter",
@@ -269,14 +274,25 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Query tiles in parallel batches of 3 to stay within rate limits
-      const BATCH_SIZE = 3;
+      // Query tiles in parallel batches of 6, using cache when available
+      const BATCH_SIZE = 6;
+      const now = Date.now();
       for (let i = 0; i < tiles.length; i += BATCH_SIZE) {
         const batch = tiles.slice(i, i + BATCH_SIZE);
         const results = await Promise.all(
           batch.map((bbox) => {
+            // Check cache first
+            const cached = overpassCache.get(bbox);
+            if (cached && now - cached.time < OVERPASS_CACHE_TTL) {
+              return Promise.resolve({ elements: cached.data });
+            }
             const q = `[out:json][timeout:10];(node["amenity"="charging_station"]["socket:type2_combo"](${bbox});node["amenity"="charging_station"]["socket:chademo"](${bbox}););out body;`;
-            return queryOverpass(q, 12000);
+            return queryOverpass(q, 8000).then((data) => {
+              if (data?.elements) {
+                overpassCache.set(bbox, { data: data.elements, time: now });
+              }
+              return data;
+            });
           })
         );
         for (const data of results) {

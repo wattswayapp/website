@@ -258,7 +258,7 @@ export default function AskAI({ trip, selectedModel, startCharge }: AskAIProps) 
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full mt-4 flex items-center gap-3 py-3 px-4 bg-gradient-to-br from-elevated/80 to-surface/80 border border-transparent rounded-2xl transition-all group ask-ai-glow"
+        className="w-full mt-4 flex items-center gap-3 py-3 px-4 bg-gradient-to-br from-elevated to-surface border border-transparent rounded-2xl transition-all group ask-ai-glow"
       >
         <div className="w-8 h-8 rounded-xl bg-[#e31937]/10 flex items-center justify-center shrink-0 group-hover:bg-[#e31937]/20 transition-colors">
           <Sparkles size={16} className="text-[#e31937]" />
@@ -275,7 +275,7 @@ export default function AskAI({ trip, selectedModel, startCharge }: AskAIProps) 
 
   // Expanded state
   return (
-    <div className="mt-4 bg-gradient-to-br from-elevated/80 to-surface/80 border border-transparent rounded-2xl overflow-hidden ask-ai-glow">
+    <div className="mt-4 bg-gradient-to-br from-elevated to-surface border border-transparent rounded-2xl overflow-hidden ask-ai-glow">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-edge/30">
         <div className="flex items-center gap-2">

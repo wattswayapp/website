@@ -348,18 +348,32 @@ export default function TripPlanner({
     setNearbyChargers([]);
 
     try {
-      const routeRes = await fetch(
-        `/api/route?originLat=${originCoords.lat}&originLng=${originCoords.lng}&destLat=${destCoords.lat}&destLng=${destCoords.lng}`
-      );
-      const routeData = await routeRes.json();
+      // Compute bbox from origin/dest coords so we can fetch chargers in parallel with the route
+      const pad = 0.45;
+      const bboxSouth = Math.min(originCoords.lat, destCoords.lat) - pad;
+      const bboxNorth = Math.max(originCoords.lat, destCoords.lat) + pad;
+      const bboxWest = Math.min(originCoords.lng, destCoords.lng) - pad;
+      const bboxEast = Math.max(originCoords.lng, destCoords.lng) + pad;
+
+      const [routeData, chargers] = await Promise.all([
+        fetch(
+          `/api/route?originLat=${originCoords.lat}&originLng=${originCoords.lng}&destLat=${destCoords.lat}&destLng=${destCoords.lng}`
+        ).then((res) => res.json()),
+        fetch("/api/chargers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ south: bboxSouth, west: bboxWest, north: bboxNorth, east: bboxEast }),
+        })
+          .then((res) => res.json())
+          .then((data) => (Array.isArray(data) ? data : []) as ChargerStation[])
+          .catch(() => [] as ChargerStation[]),
+      ]);
 
       if (routeData.error) {
         throw new Error(routeData.error);
       }
 
       setRoutePolyline(routeData.polyline);
-
-      const chargers = await fetchChargersAlongRoute(routeData.polyline);
       setNearbyChargers(chargers);
 
       const chargersForPlanning = chargers.filter((c) => {

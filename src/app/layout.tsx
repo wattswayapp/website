@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     "Cybertruck",
     "WattsWay",
   ],
-  authors: [{ name: "WattsWay", url: "https://x.com/wattwayai" }],
+  authors: [{ name: "WattsWay", url: "https://x.com/WattsWayApp" }],
   creator: "WattsWay",
   metadataBase: new URL("https://wattsway.com"),
   openGraph: {

@@ -251,7 +251,7 @@ export default function LocationInput({
       )}
 
       {showSuggestions && (suggestions.length > 0 || favoriteLocations.length > 0 || icon === "origin") && (
-        <div className="absolute z-50 top-full mt-1 w-full bg-elevated border border-edge rounded-xl shadow-2xl overflow-hidden max-h-[40vh] md:max-h-48 overflow-y-auto overscroll-contain">
+        <div className="absolute z-50 top-full mt-1 w-full bg-elevated border border-edge rounded-xl shadow-2xl overflow-hidden max-h-[60dvh] md:max-h-48 overflow-y-auto overscroll-contain">
           {loading && (
             <div className="px-4 py-2 text-xs text-faint-fg">Searching...</div>
           )}

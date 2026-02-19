@@ -1159,8 +1159,16 @@ export default function TripPlanner({
 
         {/* Mobile: steps 1-3 floating panel at top center */}
         {isMobile && wizardStep !== "results" && !mobileAboutOpen && (
-          <div className="absolute z-[500] top-14 left-3 right-3 bg-surface/60 backdrop-blur-xl border border-edge/50 shadow-2xl rounded-2xl flex flex-col safe-area-top max-h-[calc(100dvh-5rem)]">
-            <div className="p-4 overflow-y-auto overscroll-contain scrollbar-thin">
+          <div className={`absolute z-[500] top-14 left-3 right-3 bg-surface/60 backdrop-blur-xl border border-edge/50 shadow-2xl rounded-2xl flex flex-col safe-area-top ${
+            wizardStep === "origin" || wizardStep === "destination"
+              ? ""
+              : "max-h-[calc(100dvh-5rem)]"
+          }`}>
+            <div className={`p-4 ${
+              wizardStep === "origin" || wizardStep === "destination"
+                ? ""
+                : "overflow-y-auto overscroll-contain scrollbar-thin"
+            }`}>
               {renderStepContent()}
             </div>
           </div>

@@ -94,25 +94,28 @@ export default function LocationInput({
     setLocationError(null);
     setShowSuggestions(false);
     try {
-      // First try high accuracy (GPS), fall back to low accuracy (cell/wifi)
-      let position: GeolocationPosition;
-      try {
-        position = await new Promise<GeolocationPosition>((resolve, reject) => {
+      // Race: low-accuracy browser geo vs high-accuracy geo vs IP fallback
+      const geoPromise = (highAccuracy: boolean, timeout: number) =>
+        new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 8000,
-            maximumAge: 60000,
+            enableHighAccuracy: highAccuracy,
+            timeout,
+            maximumAge: 300000, // 5 min cache
           });
         });
-      } catch {
-        position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: false,
-            timeout: 15000,
-            maximumAge: 120000,
-          });
+
+      const ipFallback = fetch("/api/geolocation")
+        .then((r) => r.json())
+        .then((data) => {
+          if (!data.lat || !data.lng) throw new Error("no IP location");
+          return { coords: { latitude: data.lat, longitude: data.lng } } as GeolocationPosition;
         });
-      }
+
+      const position = await Promise.any([
+        geoPromise(false, 3000),  // low accuracy — fast
+        geoPromise(true, 3000),   // high accuracy — may be fast if cached
+        ipFallback,               // IP fallback — ~500ms
+      ]);
       const { latitude, longitude } = position.coords;
       const res = await fetch(`/api/geocode?lat=${latitude}&lng=${longitude}`);
       const data = await res.json();
@@ -123,10 +126,14 @@ export default function LocationInput({
         setLocationError("Could not determine your address");
       }
     } catch (err: unknown) {
-      const geoErr = err as GeolocationPositionError | undefined;
-      if (geoErr?.code === 1) {
+      // Promise.any rejects with AggregateError when all promises fail
+      const errors = err instanceof AggregateError ? err.errors : [err];
+      const geoErrors = errors.filter(
+        (e): e is GeolocationPositionError => typeof (e as GeolocationPositionError)?.code === "number"
+      );
+      if (geoErrors.some((e) => e.code === 1)) {
         setLocationError("denied");
-      } else if (geoErr?.code === 3) {
+      } else if (geoErrors.length > 0 && geoErrors.every((e) => e.code === 3)) {
         setLocationError("Location request timed out. Try again.");
       } else {
         setLocationError("Could not get your location. Try again.");

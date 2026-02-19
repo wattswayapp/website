@@ -255,10 +255,20 @@ body {
   animation: wizard-step-enter 250ms ease-out both;
 }
 
+/* Sheet slide-up animation */
+@keyframes sheet-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.mobile-sheet-enter {
+  animation: sheet-slide-up 300ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
 /* Mobile overrides */
 @media (max-width: 767px) {
   .leaflet-control-zoom {
-    margin-bottom: 1rem !important;
+    margin-bottom: 5rem !important; /* clears collapsed bottom sheet */
     margin-right: 0.5rem !important;
   }
 

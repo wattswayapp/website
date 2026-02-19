@@ -31,8 +31,6 @@ import {
   Sun,
   Moon,
   ChevronRight,
-  ChevronUp,
-  ChevronDown,
   Pencil,
   Plus,
   Settings2,
@@ -41,7 +39,6 @@ import {
   Eye,
   EyeOff,
   Check,
-  Info,
   ArrowLeft,
   Heart,
   GitBranch,
@@ -125,6 +122,7 @@ export default function TripPlanner({
   const [highlightedChargerId, setHighlightedChargerId] = useState<string | null>(null);
   const [swappingStopIndex, setSwappingStopIndex] = useState<number | null>(null);
   const [showAbout, setShowAbout] = useState(false);
+  const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
   const touchStartY = useRef<number | null>(null);
 
   // Toggle theme class on <html>
@@ -144,6 +142,14 @@ export default function TripPlanner({
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  // Auto-expand sheet on wizard step transitions
+  useEffect(() => {
+    if (isMobile) {
+      setMobileSheetExpanded(true);
+      setMobileSheetHidden(false);
+    }
+  }, [wizardStep, isMobile]);
 
   // Persist vehicle selection to localStorage
   useEffect(() => {
@@ -794,55 +800,9 @@ export default function TripPlanner({
     }
   };
 
-  // Desktop: panel is always top-left floating
-  // Mobile steps 1-3: panel floats at top
-  // Mobile results: panel anchored at bottom as sheet
-  const isMobileResults = isMobile && wizardStep === "results";
 
   return (
     <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
-      {/* Mobile Top Bar */}
-      <nav className="flex md:hidden items-center justify-between h-12 px-4 bg-surface/95 border-b border-edge/50 z-20 shrink-0 safe-area-top">
-        <a href="/" className="flex items-center gap-2">
-          <img src={theme === "dark" ? "/logo-dark.svg" : "/logo-light.svg"} alt="WattsWay" className="w-7 h-7 rounded-lg" />
-          <div className="flex items-baseline gap-1.5">
-            <span className="wattway-logo text-foreground !text-[13px]">WattsWay</span>
-            <span className="text-[8px] text-dim-fg font-medium tracking-wide uppercase">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
-          </div>
-        </a>
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => setShowAbout((v) => !v)}
-            className="w-9 h-9 rounded-xl bg-elevated border border-edge/50 flex items-center justify-center"
-            title="About WattsWay"
-          >
-            <Info size={15} className="text-muted-fg" />
-          </button>
-          <a
-            href="https://x.com/WattsWayApp"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-9 h-9 rounded-xl bg-elevated border border-edge/50 flex items-center justify-center"
-            title="Follow WattsWay on X"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-muted-fg">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-            </svg>
-          </a>
-          <button
-            onClick={toggleTheme}
-            className="w-9 h-9 rounded-xl bg-elevated border border-edge/50 flex items-center justify-center"
-            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {theme === "dark" ? (
-              <Sun size={15} className="text-muted-fg" />
-            ) : (
-              <Moon size={15} className="text-muted-fg" />
-            )}
-          </button>
-        </div>
-      </nav>
-
       {/* Desktop Top Navigation */}
       <nav className="hidden md:flex items-center justify-between h-14 px-6 bg-surface/95 border-b border-edge/50 z-20 shrink-0">
         {/* Left: Logo */}
@@ -905,6 +865,45 @@ export default function TripPlanner({
           swappingStopIndex={swappingStopIndex}
           onMapSwapCharger={handleMapSwapCharger}
         />
+
+        {/* Mobile floating controls — replaces nav bar */}
+        {isMobile && (
+          <div className="absolute top-3 left-3 z-[450] flex items-center gap-1.5 safe-area-top">
+            <button
+              onClick={() => {
+                setMobileAboutOpen(true);
+                setMobileSheetHidden(false);
+                setMobileSheetExpanded(true);
+              }}
+              className="w-9 h-9 rounded-xl bg-surface/80 backdrop-blur-sm border border-edge/50 flex items-center justify-center active:scale-95 transition-transform"
+              title="About WattsWay"
+            >
+              <img src={theme === "dark" ? "/logo-dark.svg" : "/logo-light.svg"} alt="WattsWay" className="w-5 h-5 rounded" />
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-xl bg-surface/80 backdrop-blur-sm border border-edge/50 flex items-center justify-center active:scale-95 transition-transform"
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? (
+                <Sun size={15} className="text-muted-fg" />
+              ) : (
+                <Moon size={15} className="text-muted-fg" />
+              )}
+            </button>
+            <a
+              href="https://x.com/WattsWayApp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-9 h-9 rounded-xl bg-surface/80 backdrop-blur-sm border border-edge/50 flex items-center justify-center active:scale-95 transition-transform"
+              title="Follow WattsWay on X"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-muted-fg">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+            </a>
+          </div>
+        )}
 
         {/* Map legend — top-right to avoid floating panel overlap */}
         {nearbyChargers.length > 0 && (
@@ -1007,97 +1006,104 @@ export default function TripPlanner({
           </div>
         )}
 
-        {/* Floating Panel — About or Wizard */}
-        {showAbout ? (
-          <div className="absolute z-[500] top-3 left-3 right-3 md:right-auto md:top-4 md:left-4 md:w-[440px] bg-surface/60 backdrop-blur-xl border border-edge/50 shadow-2xl rounded-2xl flex flex-col max-h-[calc(100dvh-6rem)] md:max-h-[calc(100dvh-5rem)]">
-            <div className="p-4 md:p-5 overflow-y-auto overscroll-contain scrollbar-none">
-              <div className="wizard-step-enter space-y-5">
-                <button
-                  onClick={() => setShowAbout(false)}
-                  className="flex items-center gap-2 text-xs md:text-sm font-medium text-muted-fg hover:text-foreground transition-colors"
-                >
-                  <ArrowLeft size={14} />
-                  Back to planner
-                </button>
+        {/* Mobile: About bottom sheet (from floating logo button) */}
+        {isMobile && mobileAboutOpen && (
+          <div className="absolute inset-x-0 bottom-0 z-[500] flex flex-col mobile-sheet-enter">
+            <div className="bg-surface/60 backdrop-blur-xl border-t border-edge/50 rounded-t-2xl shadow-2xl flex flex-col max-h-[85dvh]">
+              <div className="flex items-center justify-center pt-3 pb-2 shrink-0 w-full">
+                <div className="w-8 h-1 rounded-full bg-muted-fg/40" />
+              </div>
+              <div className="overflow-y-auto overscroll-contain px-4 pb-safe scrollbar-thin">
+                <div className="wizard-step-enter space-y-5">
+                  <button
+                    onClick={() => setMobileAboutOpen(false)}
+                    className="flex items-center gap-2 text-xs font-medium text-muted-fg hover:text-foreground transition-colors"
+                  >
+                    <ArrowLeft size={14} />
+                    Back to planner
+                  </button>
 
-                <div>
-                  <h2 className="text-lg md:text-xl font-bold text-foreground mb-1">About WattsWay</h2>
-                  <p className="text-xs md:text-sm text-faint-fg">The open-source EV trip planner</p>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="bg-elevated/60 rounded-xl p-3 md:p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Heart size={14} className="text-[#e31937]" />
-                      <h3 className="text-sm md:text-base font-semibold text-foreground">Why we built this</h3>
-                    </div>
-                    <p className="text-xs md:text-sm text-secondary-fg leading-relaxed">
-                      Planning a road trip in an EV should be effortless, not stressful. We built WattsWay because existing tools were either locked behind apps, cluttered with ads, or didn&apos;t account for real-world charging needs. We wanted something fast, beautiful, and genuinely useful, a planner that thinks the way drivers do.
-                    </p>
+                  <div>
+                    <h2 className="text-lg font-bold text-foreground mb-1">About WattsWay</h2>
+                    <p className="text-xs text-faint-fg">The open-source EV trip planner</p>
                   </div>
 
-                  <div className="bg-elevated/60 rounded-xl p-3 md:p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <GitBranch size={14} className="text-green-400" />
-                      <h3 className="text-sm md:text-base font-semibold text-foreground">Open source</h3>
+                  <div className="space-y-3">
+                    <div className="bg-elevated/60 rounded-xl p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Heart size={14} className="text-[#e31937]" />
+                        <h3 className="text-sm font-semibold text-foreground">Why we built this</h3>
+                      </div>
+                      <p className="text-xs text-secondary-fg leading-relaxed">
+                        Planning a road trip in an EV should be effortless, not stressful. We built WattsWay because existing tools were either locked behind apps, cluttered with ads, or didn&apos;t account for real-world charging needs. We wanted something fast, beautiful, and genuinely useful, a planner that thinks the way drivers do.
+                      </p>
                     </div>
-                    <p className="text-xs md:text-sm text-secondary-fg leading-relaxed">
-                      WattsWay will be fully open source. We believe the best EV trip planner should be built by the community that uses it. Whether you&apos;re a developer, a designer, or just someone with a great idea, your contributions can make WattsWay better for every EV driver out there.
-                    </p>
+
+                    <div className="bg-elevated/60 rounded-xl p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <GitBranch size={14} className="text-green-400" />
+                        <h3 className="text-sm font-semibold text-foreground">Open source</h3>
+                      </div>
+                      <p className="text-xs text-secondary-fg leading-relaxed">
+                        WattsWay will be fully open source. We believe the best EV trip planner should be built by the community that uses it. Whether you&apos;re a developer, a designer, or just someone with a great idea, your contributions can make WattsWay better for every EV driver out there.
+                      </p>
+                      <a
+                        href="https://github.com/wattswayapp/website"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-[#e31937] hover:text-[#ff2d4b] transition-colors"
+                      >
+                        <GitBranch size={12} />
+                        Contribute on GitHub
+                      </a>
+                    </div>
+
+                    <div className="bg-elevated/60 rounded-xl p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Globe size={14} className="text-blue-400" />
+                        <h3 className="text-sm font-semibold text-foreground">Our vision</h3>
+                      </div>
+                      <p className="text-xs text-secondary-fg leading-relaxed">
+                        We want WattsWay to become the go-to trip planner for every EV, not just Teslas. With community contributions, we can add support for more vehicles, more charger networks, and smarter route optimization. Together, we can build the trip planner the EV world deserves.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
                     <a
-                      href="https://github.com/wattswayapp/website"
+                      href="https://x.com/WattsWayApp"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 mt-3 text-xs md:text-sm font-medium text-[#e31937] hover:text-[#ff2d4b] transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-elevated/80 border border-edge/50 rounded-xl text-xs font-medium text-secondary-fg hover:bg-accent-surface/80 transition-all"
                     >
-                      <GitBranch size={12} />
-                      Contribute on GitHub
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                      </svg>
+                      Follow us
                     </a>
+                    <button
+                      onClick={() => setMobileAboutOpen(false)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#e31937] hover:bg-[#ff2d4b] text-white rounded-xl text-xs font-medium transition-all"
+                    >
+                      <Zap size={14} />
+                      Plan a trip
+                    </button>
                   </div>
 
-                  <div className="bg-elevated/60 rounded-xl p-3 md:p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Globe size={14} className="text-blue-400" />
-                      <h3 className="text-sm md:text-base font-semibold text-foreground">Our vision</h3>
-                    </div>
-                    <p className="text-xs md:text-sm text-secondary-fg leading-relaxed">
-                      We want WattsWay to become the go-to trip planner for every EV, not just Teslas. With community contributions, we can add support for more vehicles, more charger networks, and smarter route optimization. Together, we can build the trip planner the EV world deserves.
+                  <div className="pt-2 border-t border-edge/30 text-center">
+                    <p className="text-[10px] text-dim-fg">
+                      v{process.env.NEXT_PUBLIC_APP_VERSION} · Built with Claude Code &amp; Grok · Powered by OpenStreetMap, OSRM &amp; supercharge.info
                     </p>
                   </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <a
-                    href="https://x.com/WattsWayApp"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 md:py-3 bg-elevated/80 border border-edge/50 rounded-xl text-xs md:text-sm font-medium text-secondary-fg hover:bg-accent-surface/80 transition-all"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                    </svg>
-                    Follow us
-                  </a>
-                  <button
-                    onClick={() => setShowAbout(false)}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 md:py-3 bg-[#e31937] hover:bg-[#ff2d4b] text-white rounded-xl text-xs md:text-sm font-medium transition-all"
-                  >
-                    <Zap size={14} />
-                    Plan a trip
-                  </button>
-                </div>
-
-                <div className="pt-2 border-t border-edge/30 text-center">
-                  <p className="text-[10px] md:text-[11px] text-dim-fg">
-                    v{process.env.NEXT_PUBLIC_APP_VERSION} · Built with Claude Code &amp; Grok · Powered by OpenStreetMap, OSRM &amp; supercharge.info
-                  </p>
                 </div>
               </div>
             </div>
           </div>
-        ) : isMobileResults ? (
+        )}
+
+        {/* Mobile: results bottom sheet OR "Show trip" pill */}
+        {isMobile && wizardStep === "results" && !mobileAboutOpen && (
           mobileSheetHidden ? (
-            /* Hidden state: small pill button centered at the bottom */
             <div className="absolute inset-x-0 bottom-6 z-[500] flex justify-center">
               <button
                 onClick={() => {
@@ -1111,10 +1117,8 @@ export default function TripPlanner({
               </button>
             </div>
           ) : (
-            /* Mobile results: bottom-anchored sheet — tap handle to collapse/expand */
-            <div className="absolute inset-x-0 bottom-0 z-[500] flex flex-col">
+            <div className="absolute inset-x-0 bottom-0 z-[500] flex flex-col mobile-sheet-enter">
               <div className={`bg-surface/60 backdrop-blur-xl border-t border-edge/50 rounded-t-2xl shadow-2xl flex flex-col transition-[max-height] duration-300 ease-in-out ${mobileSheetExpanded ? "max-h-[70dvh]" : "max-h-[64px]"}`}>
-                {/* Drag handle — swipe to expand/collapse, tap to hide */}
                 <button
                   onClick={() => setMobileSheetHidden(true)}
                   onTouchStart={(e) => {
@@ -1126,10 +1130,8 @@ export default function TripPlanner({
                     touchStartY.current = null;
                     if (Math.abs(deltaY) > 30) {
                       if (deltaY < 0) {
-                        // Swipe up → expand
                         setMobileSheetExpanded(true);
                       } else {
-                        // Swipe down → hide
                         setMobileSheetHidden(true);
                       }
                     }
@@ -1153,23 +1155,123 @@ export default function TripPlanner({
               </div>
             </div>
           )
-        ) : (
-          /* Desktop + Mobile steps 1-3: floating panel at top-left */
-          <div
-            className={`absolute z-[500] top-3 left-3 right-3 md:right-auto md:top-4 md:left-4 md:w-[440px] bg-surface/60 backdrop-blur-xl border border-edge/50 shadow-2xl rounded-2xl flex flex-col ${
-              wizardStep === "origin" || wizardStep === "destination"
-                ? ""
-                : "max-h-[calc(100dvh-6rem)] md:max-h-[calc(100dvh-5rem)]"
-            }`}
-          >
-            <div className={`p-4 md:p-5 ${
-              wizardStep === "origin" || wizardStep === "destination"
-                ? ""
-                : "overflow-y-auto overscroll-contain scrollbar-none"
-            }`}>
+        )}
+
+        {/* Mobile: steps 1-3 floating panel at top center */}
+        {isMobile && wizardStep !== "results" && !mobileAboutOpen && (
+          <div className="absolute z-[500] top-14 left-3 right-3 bg-surface/60 backdrop-blur-xl border border-edge/50 shadow-2xl rounded-2xl flex flex-col safe-area-top max-h-[calc(100dvh-5rem)]">
+            <div className="p-4 overflow-y-auto overscroll-contain scrollbar-thin">
               {renderStepContent()}
             </div>
           </div>
+        )}
+
+        {/* Desktop: About or Wizard panel */}
+        {!isMobile && (
+          showAbout ? (
+            <div className="absolute z-[500] top-4 left-4 w-[440px] bg-surface/60 backdrop-blur-xl border border-edge/50 shadow-2xl rounded-2xl flex flex-col max-h-[calc(100dvh-5rem)]">
+              <div className="p-5 overflow-y-auto overscroll-contain scrollbar-none">
+                <div className="wizard-step-enter space-y-5">
+                  <button
+                    onClick={() => setShowAbout(false)}
+                    className="flex items-center gap-2 text-sm font-medium text-muted-fg hover:text-foreground transition-colors"
+                  >
+                    <ArrowLeft size={14} />
+                    Back to planner
+                  </button>
+
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground mb-1">About WattsWay</h2>
+                    <p className="text-sm text-faint-fg">The open-source EV trip planner</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="bg-elevated/60 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Heart size={14} className="text-[#e31937]" />
+                        <h3 className="text-base font-semibold text-foreground">Why we built this</h3>
+                      </div>
+                      <p className="text-sm text-secondary-fg leading-relaxed">
+                        Planning a road trip in an EV should be effortless, not stressful. We built WattsWay because existing tools were either locked behind apps, cluttered with ads, or didn&apos;t account for real-world charging needs. We wanted something fast, beautiful, and genuinely useful, a planner that thinks the way drivers do.
+                      </p>
+                    </div>
+
+                    <div className="bg-elevated/60 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <GitBranch size={14} className="text-green-400" />
+                        <h3 className="text-base font-semibold text-foreground">Open source</h3>
+                      </div>
+                      <p className="text-sm text-secondary-fg leading-relaxed">
+                        WattsWay will be fully open source. We believe the best EV trip planner should be built by the community that uses it. Whether you&apos;re a developer, a designer, or just someone with a great idea, your contributions can make WattsWay better for every EV driver out there.
+                      </p>
+                      <a
+                        href="https://github.com/wattswayapp/website"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-[#e31937] hover:text-[#ff2d4b] transition-colors"
+                      >
+                        <GitBranch size={12} />
+                        Contribute on GitHub
+                      </a>
+                    </div>
+
+                    <div className="bg-elevated/60 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Globe size={14} className="text-blue-400" />
+                        <h3 className="text-base font-semibold text-foreground">Our vision</h3>
+                      </div>
+                      <p className="text-sm text-secondary-fg leading-relaxed">
+                        We want WattsWay to become the go-to trip planner for every EV, not just Teslas. With community contributions, we can add support for more vehicles, more charger networks, and smarter route optimization. Together, we can build the trip planner the EV world deserves.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <a
+                      href="https://x.com/WattsWayApp"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 bg-elevated/80 border border-edge/50 rounded-xl text-sm font-medium text-secondary-fg hover:bg-accent-surface/80 transition-all"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                      </svg>
+                      Follow us
+                    </a>
+                    <button
+                      onClick={() => setShowAbout(false)}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#e31937] hover:bg-[#ff2d4b] text-white rounded-xl text-sm font-medium transition-all"
+                    >
+                      <Zap size={14} />
+                      Plan a trip
+                    </button>
+                  </div>
+
+                  <div className="pt-2 border-t border-edge/30 text-center">
+                    <p className="text-[11px] text-dim-fg">
+                      v{process.env.NEXT_PUBLIC_APP_VERSION} · Built with Claude Code &amp; Grok · Powered by OpenStreetMap, OSRM &amp; supercharge.info
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div
+              className={`absolute z-[500] top-4 left-4 w-[440px] bg-surface/60 backdrop-blur-xl border border-edge/50 shadow-2xl rounded-2xl flex flex-col ${
+                wizardStep === "origin" || wizardStep === "destination"
+                  ? ""
+                  : "max-h-[calc(100dvh-5rem)]"
+              }`}
+            >
+              <div className={`p-5 ${
+                wizardStep === "origin" || wizardStep === "destination"
+                  ? ""
+                  : "overflow-y-auto overscroll-contain scrollbar-none"
+              }`}>
+                {renderStepContent()}
+              </div>
+            </div>
+          )
         )}
 
         {/* Saved Trips Panel */}

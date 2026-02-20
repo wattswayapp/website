@@ -94,7 +94,7 @@ export default function LocationInput({
     setLocationError(null);
     setShowSuggestions(false);
     try {
-      // Race: low-accuracy browser geo vs high-accuracy geo vs IP fallback
+      // Prefer browser GPS, only fall back to IP if GPS fails
       const geoPromise = (highAccuracy: boolean, timeout: number) =>
         new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -104,18 +104,19 @@ export default function LocationInput({
           });
         });
 
-      const ipFallback = fetch("/api/geolocation")
-        .then((r) => r.json())
-        .then((data) => {
-          if (!data.lat || !data.lng) throw new Error("no IP location");
-          return { coords: { latitude: data.lat, longitude: data.lng } } as GeolocationPosition;
-        });
+      const ipFallback = () =>
+        fetch("/api/geolocation")
+          .then((r) => r.json())
+          .then((data) => {
+            if (!data.lat || !data.lng) throw new Error("no IP location");
+            return { coords: { latitude: data.lat, longitude: data.lng } } as GeolocationPosition;
+          });
 
+      // Race low + high accuracy GPS first; IP only if both fail
       const position = await Promise.any([
         geoPromise(false, 3000),  // low accuracy — fast
         geoPromise(true, 3000),   // high accuracy — may be fast if cached
-        ipFallback,               // IP fallback — ~500ms
-      ]);
+      ]).catch(() => ipFallback());
       const { latitude, longitude } = position.coords;
       const res = await fetch(`/api/geocode?lat=${latitude}&lng=${longitude}`);
       const data = await res.json();

@@ -8,7 +8,7 @@ import UnitToggle from "./UnitToggle";
 import TripSummary from "./TripSummary";
 import AskAI from "./AskAI";
 import { TESLA_MODELS } from "@/lib/tesla-models";
-import { UnitSystem } from "@/lib/units";
+import { UnitSystem, milesToKm } from "@/lib/units";
 import {
   TeslaModel,
   LatLng,
@@ -80,6 +80,13 @@ const LOADING_MESSAGES = [
   "Making sure you won't get stranded...",
 ];
 
+function getBatteryColor(pct: number): string {
+  if (pct > 60) return "#22c55e";
+  if (pct > 30) return "#eab308";
+  if (pct > 15) return "#f97316";
+  return "#ef4444";
+}
+
 export default function TripPlanner({
   initialModel,
   initialStartCharge,
@@ -91,6 +98,7 @@ export default function TripPlanner({
   const [selectedModel, setSelectedModel] = useState<TeslaModel>(
     initialModel ?? TESLA_MODELS[1] // Model 3 Long Range default
   );
+  const [startCharge, setStartCharge] = useState(initialStartCharge ?? 90);
   const [units, setUnits] = useState<UnitSystem>("metric");
   const [theme, setTheme] = useState<Theme>(() => {
     const hour = new Date().getHours();
@@ -151,7 +159,7 @@ export default function TripPlanner({
     }
   }, [wizardStep, isMobile]);
 
-  // Persist vehicle selection to localStorage
+  // Persist vehicle selection and charge to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -159,13 +167,13 @@ export default function TripPlanner({
         JSON.stringify({
           completed: true,
           modelId: selectedModel.id,
-          startCharge: initialStartCharge ?? 90,
+          startCharge,
         })
       );
     } catch {
       // localStorage unavailable
     }
-  }, [selectedModel, initialStartCharge]);
+  }, [selectedModel, startCharge]);
 
   // Cycle loading messages while planning
   useEffect(() => {
@@ -187,7 +195,7 @@ export default function TripPlanner({
       trip,
       selectedModel.id,
       selectedModel.name,
-      initialStartCharge ?? 90
+      startCharge
     );
     if (result) {
       setSaveConfirm(true);
@@ -232,20 +240,19 @@ export default function TripPlanner({
       const newStations = chargingStops.map((s, i) =>
         i === index ? newStation : s.station
       );
-      const startChargeValue = initialStartCharge ?? 90;
       const newStops = recalculateStops(
         routePolyline,
         trip.distance,
         newStations,
         selectedModel,
-        startChargeValue
+        startCharge
       );
       const totalChargeTime = newStops.reduce((sum, s) => sum + s.chargeTime, 0);
       const arrivalCharge = calculateArrivalCharge(
         trip.distance,
         newStops,
         selectedModel,
-        startChargeValue
+        startCharge
       );
       setChargingStops(newStops);
       setTrip({
@@ -256,7 +263,7 @@ export default function TripPlanner({
         totalTripTime: trip.duration + totalChargeTime,
       });
     },
-    [trip, routePolyline, chargingStops, selectedModel, initialStartCharge]
+    [trip, routePolyline, chargingStops, selectedModel, startCharge]
   );
 
   const handleMapSwapCharger = useCallback(
@@ -388,7 +395,7 @@ export default function TripPlanner({
         return chargerFilters.showOtherChargers;
       });
 
-      const startChargeValue = initialStartCharge ?? 90;
+      const startChargeValue = startCharge;
       const stops = planChargingStops(
         routeData.polyline,
         routeData.distance,
@@ -447,7 +454,7 @@ export default function TripPlanner({
     } finally {
       setLoading(false);
     }
-  }, [originCoords, destCoords, origin, destination, selectedModel, chargerFilters, initialStartCharge]);
+  }, [originCoords, destCoords, origin, destination, selectedModel, chargerFilters, startCharge]);
 
   // Compact origin chip — clickable to go back to origin step
   const originChip = (
@@ -598,6 +605,47 @@ export default function TripPlanner({
                 <ChevronRight size={12} className={`transition-transform ${settingsOpen ? "rotate-90" : ""}`} />
               </summary>
               <div className="space-y-3 pt-1">
+                {/* Starting charge slider */}
+                <div>
+                  <label className="block text-[11px] font-medium text-muted-fg uppercase tracking-wider mb-1.5">
+                    Starting Charge
+                  </label>
+                  <div className="bg-elevated/80 border border-edge/50 rounded-xl p-3">
+                    {/* Compact battery bar */}
+                    <div className="relative w-full h-6 bg-surface rounded-lg overflow-hidden border border-edge/30 mb-2.5">
+                      <div
+                        className="h-full rounded-md transition-all duration-150"
+                        style={{
+                          width: `${startCharge}%`,
+                          background: `linear-gradient(90deg, ${getBatteryColor(startCharge)}cc, ${getBatteryColor(startCharge)})`,
+                        }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-[11px] font-bold text-white drop-shadow-sm">{startCharge}%</span>
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      min={10}
+                      max={100}
+                      value={startCharge}
+                      onChange={(e) => setStartCharge(Number(e.target.value))}
+                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer onboarding-slider"
+                      style={{
+                        background: `linear-gradient(to right, ${getBatteryColor(startCharge)} 0%, ${getBatteryColor(startCharge)} ${((startCharge - 10) / 90) * 100}%, var(--color-elevated) ${((startCharge - 10) / 90) * 100}%, var(--color-elevated) 100%)`,
+                      }}
+                    />
+                    <div className="flex items-center justify-center gap-2 mt-2">
+                      <Zap size={12} className="text-[#e31937]" />
+                      <span className="text-[11px] text-secondary-fg">
+                        <span className="text-foreground font-semibold">{Math.round(milesToKm(selectedModel.range) * (startCharge / 100))} km</span>
+                        <span className="text-dim-fg ml-1">({Math.round(selectedModel.range * (startCharge / 100))} mi)</span>
+                        {" "}est. range
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 <UnitToggle units={units} onChange={setUnits} />
 
                 {/* Charger type preference */}
@@ -742,10 +790,10 @@ export default function TripPlanner({
               </div>
             )}
 
-            <TripSummary trip={trip} loading={loading} units={units} startCharge={initialStartCharge ?? 90} trafficCongestion={trafficCongestion} trafficLoading={trafficLoading} nearbyChargers={nearbyChargers} onSwapStop={handleSwapStop} onHighlightCharger={setHighlightedChargerId} onSwappingStopChange={setSwappingStopIndex} />
+            <TripSummary trip={trip} loading={loading} units={units} startCharge={startCharge} trafficCongestion={trafficCongestion} trafficLoading={trafficLoading} nearbyChargers={nearbyChargers} onSwapStop={handleSwapStop} onHighlightCharger={setHighlightedChargerId} onSwappingStopChange={setSwappingStopIndex} />
 
             {trip && (
-              <AskAI trip={trip} selectedModel={selectedModel} startCharge={initialStartCharge ?? 90} />
+              <AskAI trip={trip} selectedModel={selectedModel} startCharge={startCharge} />
             )}
 
             {/* Action buttons */}
@@ -1158,7 +1206,7 @@ export default function TripPlanner({
         )}
 
         {/* Mobile: steps 1-3 floating panel at top center */}
-        {isMobile && wizardStep !== "results" && !mobileAboutOpen && (
+        {isMobile && wizardStep !== "results" && !mobileAboutOpen && !savedTripsOpen && (
           <div className={`absolute z-[500] top-14 left-3 right-3 bg-surface/60 backdrop-blur-xl border border-edge/50 shadow-2xl rounded-2xl flex flex-col safe-area-top ${
             wizardStep === "origin" || wizardStep === "destination"
               ? ""
@@ -1175,7 +1223,7 @@ export default function TripPlanner({
         )}
 
         {/* Desktop: About or Wizard panel */}
-        {!isMobile && (
+        {!isMobile && !savedTripsOpen && (
           showAbout ? (
             <div className="absolute z-[500] top-4 left-4 w-[440px] bg-surface/60 backdrop-blur-xl border border-edge/50 shadow-2xl rounded-2xl flex flex-col max-h-[calc(100dvh-5rem)]">
               <div className="p-5 overflow-y-auto overscroll-contain scrollbar-none">

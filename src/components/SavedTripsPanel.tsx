@@ -68,7 +68,7 @@ export default function SavedTripsPanel({
       className={
         isMobile
           ? "fixed inset-0 z-[700] bg-surface/98 backdrop-blur-xl flex flex-col safe-area-top"
-          : "absolute top-4 left-4 z-[600] w-[380px] max-h-[calc(100dvh-5rem)] bg-surface/90 backdrop-blur-xl border border-edge/50 shadow-2xl rounded-2xl flex flex-col"
+          : "absolute top-4 left-4 z-[500] w-[440px] max-h-[calc(100dvh-5rem)] bg-surface/60 backdrop-blur-xl border border-edge/50 shadow-2xl rounded-2xl flex flex-col"
       }
     >
       {/* Header */}

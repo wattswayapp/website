@@ -7,11 +7,11 @@ import { ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 const MODEL_IMAGES: Record<string, string> = {
-  "model-3": "https://static-assets.tesla.com/v1/compositor/?model=m3&view=STUD_3QTR&size=400&bkba_opt=1&options=PPSW,W38B",
-  "model-y": "https://static-assets.tesla.com/v1/compositor/?model=my&view=STUD_3QTR&size=400&bkba_opt=1&options=PPSW,WY19B",
-  "model-s": "https://static-assets.tesla.com/v1/compositor/?model=ms&view=STUD_3QTR&size=400&bkba_opt=1&options=PPSW,WS10",
-  "model-x": "https://static-assets.tesla.com/v1/compositor/?model=mx&view=STUD_3QTR&size=400&bkba_opt=1&options=PPSW,WX00",
-  "cybertruck": "https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto,w_400/Cybertruck-Main-Hero-Desktop",
+  "model-3": "/vehicles/model-3.png",
+  "model-y": "/vehicles/model-y.png",
+  "model-s": "/vehicles/model-s.png",
+  "model-x": "/vehicles/model-x.png",
+  "cybertruck": "/vehicles/cybertruck.jpg",
 };
 
 const MODEL_GROUPS = [
